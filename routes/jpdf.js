@@ -2,7 +2,7 @@ const express = require('express')
     , router = express.Router()
     , puppeteer = require('puppeteer')
 ;
-let browser, page;
+let browser;
 const template = {
     format: 'A4',
     displayHeaderFooter: true,
@@ -15,8 +15,6 @@ const template = {
 (async () => {
     try {
         browser = await puppeteer.launch({headless: true, defaultViewport: null,args: ['--start-maximized']});
-        page = await browser.newPage();
-        await page.setCacheEnabled(false);
     } catch (e) {
         console.error(e.message);
         res.status(500).end();
@@ -30,6 +28,7 @@ const template = {
 router.post('/html/to/pdf', function (req, res, next) {
     (async () => {
         try {
+            const page = await browser.newPage();
             await page.setCacheEnabled(false);
             await page.setContent(await req.body.html)
             await page.evaluateHandle('document.fonts.ready');
@@ -49,7 +48,7 @@ router.post('/html/to/pdf', function (req, res, next) {
 router.post('/html/to/png', function (req, res, next) {
     (async () => {
         try {
-            await page.setCacheEnabled(false);
+            const page = await browser.newPage();
             await page.setContent(await req.body.html)
             await page.evaluateHandle('document.fonts.ready');
             await page.evaluateHandle('document.ready');
@@ -69,9 +68,9 @@ router.post('/html/to/png', function (req, res, next) {
 router.get('/url/to/pdf', function (req, res, next) {
     (async () => {
         try {
-            await page.setCacheEnabled(false);
+            const page = await browser.newPage();
             await page.goto(await req.query.url, {
-                waitUtil: 'networkidle0',
+                waitUntil: 'networkidle0',
             });
 
             await page.on('load', () => {
@@ -98,7 +97,7 @@ router.get('/url/to/pdf', function (req, res, next) {
 router.get('/url/to/png', function (req, res, next) {
     (async () => {
         try {
-            await page.setCacheEnabled(false);
+            const page = await browser.newPage();
             await page.goto(await req.query.url, {
                 // waitUtil: 'load',
                 // waitUtil: 'domcontentloaded',
